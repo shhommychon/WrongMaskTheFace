@@ -25,3 +25,6 @@ datasets
 *.dat
 *.docx
 
+# my additional .gitignore
+venv/
+dlib_models/

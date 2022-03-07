@@ -92,6 +92,15 @@ def get_line(face_landmark, image, type="eye", debug=False):
         left_point = [left_eye_mid[0], left_eye_mid[1] + shiftY]
         right_point = [right_eye_mid[0], right_eye_mid[1] + shiftY]
         mid_point = bottom_lip_mid
+    
+    elif type == "top_lip":
+        # copied from type == "bottom_lip"
+        bottom_lip = face_landmark["top_lip"] # only this line is changed
+        bottom_lip_mid = np.max(np.array(bottom_lip), axis=0)
+        shiftY = bottom_lip_mid[1] - eye_line_mid[1]
+        left_point = [left_eye_mid[0], left_eye_mid[1] + shiftY]
+        right_point = [right_eye_mid[0], right_eye_mid[1] + shiftY]
+        mid_point = bottom_lip_mid
 
     elif type == "perp_line":
         bottom_lip = face_landmark["bottom_lip"]
@@ -249,6 +258,165 @@ def get_six_points(face_landmark, image):
     face_f = points[-1]
 
     six_points = np.float32([face_a, face_b, face_c, face_f, face_e, face_d])
+
+    return six_points, angle
+
+
+def get_six_points_chin(face_landmark, image):
+    """Incorrectly mask over chin
+    """
+    _, perp_line1, _, _, m = get_line(face_landmark, image, type="nose_mid")
+    face_b = m
+
+    perp_line, _, _, _, _ = get_line(face_landmark, image, type="perp_line")
+    points1 = get_points_on_chin(perp_line1, face_landmark)
+    points = get_points_on_chin(perp_line, face_landmark)
+    if not points1:
+        face_e = tuple(np.asarray(points[0]))
+    elif not points:
+        face_e = tuple(np.asarray(points1[0]))
+    else:
+        face_e = tuple((np.asarray(points[0]) + np.asarray(points1[0])) / 2)
+    # face_e = points1[0]
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_long")
+
+    angle = get_angle(perp_line, nose_mid_line)
+    # print("angle: ", angle)
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_tip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    if len(points) < 2:
+        face_landmark = get_face_ellipse(face_landmark)
+        # print("extrapolating chin")
+        points = get_points_on_chin(
+            nose_mid_line, face_landmark, chin_type="chin_extrapolated"
+        )
+        if len(points) < 2:
+            points = []
+            points.append(face_landmark["chin"][0])
+            points.append(face_landmark["chin"][-1])
+    face_a = points[0]
+    face_c = points[-1]
+
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="bottom_lip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    face_d = points[0]
+    face_f = points[-1]
+
+    six_points = np.float32([face_a, face_b, face_c, face_f, face_e, face_d])
+    six_points[1][0], six_points[1][1] = (six_points[5][0] + six_points[3][0]) / 2, (six_points[5][1] + six_points[3][1]) / 2
+    six_points[1][0], six_points[1][1] = (six_points[1][0]*5 + six_points[4][0]) / 6, (six_points[1][1]*5 + six_points[4][1]) / 6
+    six_points[0][0], six_points[0][1], six_points[2][0], six_points[2][1] = six_points[5][0], six_points[5][1], six_points[3][0], six_points[3][1]
+    new_d_x, new_f_x = (six_points[5][0] + six_points[4][0]*2) / 3, (six_points[3][0] + six_points[4][0]*2) / 3
+    new_d_y, new_f_y = (six_points[5][1] + six_points[4][1]*3) / 4, (six_points[3][1] + six_points[4][1]*3) / 4
+    six_points[5][0], six_points[5][1], six_points[3][0], six_points[3][1] = new_d_x, new_d_y, new_f_x, new_f_y
+
+    return six_points, angle
+
+
+def get_six_points_nose(face_landmark, image):
+    """Incorrectly mask over nose
+    """
+    _, perp_line1, _, _, _ = get_line(face_landmark, image, type="nose_mid")
+    face_b = (np.mean(np.array(face_landmark["left_eye"]), axis=0) + np.mean(np.array(face_landmark["right_eye"]), axis=0)) / 2
+
+    perp_line, _, _, _, _ = get_line(face_landmark, image, type="perp_line")
+    points1 = get_points_on_chin(perp_line1, face_landmark)
+    points = get_points_on_chin(perp_line, face_landmark)
+    if not points1:
+        face_e = tuple(np.asarray(points[0]))
+    elif not points:
+        face_e = tuple(np.asarray(points1[0]))
+    else:
+        face_e = tuple((np.asarray(points[0]) + np.asarray(points1[0])) / 2)
+    _, _, _, _, m = get_line(face_landmark, image, type="nose_mid")
+    nose_mid_e = m
+    _, _, _, _, m = get_line(face_landmark, image, type="top_lip")
+    top_lip_e = m
+    face_b = (nose_mid_e + face_b) / 2
+    face_e = (nose_mid_e + top_lip_e) / 2
+    # face_e = points1[0]
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_long")
+
+    angle = get_angle(perp_line, nose_mid_line)
+    # print("angle: ", angle)
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_tip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    if len(points) < 2:
+        face_landmark = get_face_ellipse(face_landmark)
+        # print("extrapolating chin")
+        points = get_points_on_chin(
+            nose_mid_line, face_landmark, chin_type="chin_extrapolated"
+        )
+        if len(points) < 2:
+            points = []
+            points.append(face_landmark["chin"][0])
+            points.append(face_landmark["chin"][-1])
+    face_a = points[0]
+    face_c = points[-1]
+    # cv2.imshow('j', image)
+    # cv2.waitKey(0)
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="bottom_lip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    face_d = points[0]
+    face_f = points[-1]
+
+    six_points = np.float32([face_a, face_b, face_c, face_f, face_e, face_d])
+    six_points[0][1] = six_points[1][1]
+    six_points[2][1] = six_points[1][1]
+    six_points[5][1] = six_points[4][1]
+    six_points[3][1] = six_points[4][1]
+
+    return six_points, angle
+
+
+def get_six_points_eye(face_landmark, image):
+    """Incorrectly mask over eye
+    """
+    _, perp_line1, _, _, _ = get_line(face_landmark, image, type="nose_mid")
+    face_b = (np.mean(np.array(face_landmark["left_eyebrow"]), axis=0) + np.mean(np.array(face_landmark["right_eyebrow"]), axis=0)) / 2
+
+    perp_line, _, _, _, _ = get_line(face_landmark, image, type="perp_line")
+    points1 = get_points_on_chin(perp_line1, face_landmark)
+    points = get_points_on_chin(perp_line, face_landmark)
+    if not points1:
+        face_e = tuple(np.asarray(points[0]))
+    elif not points:
+        face_e = tuple(np.asarray(points1[0]))
+    else:
+        face_e = tuple((np.asarray(points[0]) + np.asarray(points1[0])) / 2)
+    _, _, _, _, m = get_line(face_landmark, image, type="nose_mid")
+    face_e = m
+    # face_e = points1[0]
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_long")
+
+    angle = get_angle(perp_line, nose_mid_line)
+    # print("angle: ", angle)
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="nose_tip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    if len(points) < 2:
+        face_landmark = get_face_ellipse(face_landmark)
+        # print("extrapolating chin")
+        points = get_points_on_chin(
+            nose_mid_line, face_landmark, chin_type="chin_extrapolated"
+        )
+        if len(points) < 2:
+            points = []
+            points.append(face_landmark["chin"][0])
+            points.append(face_landmark["chin"][-1])
+    face_a = points[0]
+    face_c = points[-1]
+    # cv2.imshow('j', image)
+    # cv2.waitKey(0)
+    nose_mid_line, _, _, _, _ = get_line(face_landmark, image, type="bottom_lip")
+    points = get_points_on_chin(nose_mid_line, face_landmark)
+    face_d = points[0]
+    face_f = points[-1]
+
+    six_points = np.float32([face_a, face_b, face_c, face_f, face_e, face_d])
+    six_points[0][1] = six_points[1][1]
+    six_points[2][1] = six_points[1][1]
+    six_points[5][1] = six_points[4][1]
+    six_points[3][1] = six_points[4][1]
 
     return six_points, angle
 
@@ -601,7 +769,16 @@ def mask_image(image_path, args):
         face_landmarks = shape_to_landmarks(shape)
         face_location = rect_to_bb(face_location)
         # draw_landmarks(face_landmarks, image)
-        six_points_on_face, angle = get_six_points(face_landmarks, image)
+        if args.wear_type == "normal":
+            six_points_on_face, angle = get_six_points(face_landmarks, image)
+        elif args.wear_type == "chin_mask":
+            six_points_on_face, angle = get_six_points_chin(face_landmarks, image)
+        elif args.wear_type == "nose_mask":
+            six_points_on_face, angle = get_six_points_nose(face_landmarks, image)
+        elif args.wear_type == "eye_mask":
+            six_points_on_face, angle = get_six_points_eye(face_landmarks, image)
+        else:
+            raise ValueError(args.wear_type)
         mask = []
         if mask_type != "all":
             if len(masked_images) > 0:

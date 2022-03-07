@@ -55,6 +55,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--wear_type",
+    type=str,
+    default="normal",
+    choices=["normal", "chin_mask", "nose_mask", "eye_mask"],
+    help="Type of masking to be applied. Available options: normal, chin_mask, nose_mask, eye_mask",
+)
+
+
+parser.add_argument(
     "--code",
     type=str,
     # default="cloth-masks/textures/check/check_4.jpg, cloth-#e54294, cloth-#ff0000, cloth, cloth-masks/textures/others/heart_1.png, cloth-masks/textures/fruits/pineapple.png, N95, surgical_blue, surgical_green",
