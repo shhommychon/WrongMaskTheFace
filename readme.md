@@ -1,7 +1,7 @@
 # WrongMaskTheFace - Convert face dataset to incorrectly masked dataset
 ## Acknowledgements
 
-* This is my quick-and-dirty implementation of incorrectly masking faces based on [Aqeel Anwar](https://github.com/aqeelanwar)'s [**MaskTheFace**](https://github.com/aqeelanwar/MaskTheFace). Installation and basic usage follows the original methods from [**MaskTheFace**](https://github.com/aqeelanwar/MaskTheFace).
+* This is my *quick-and-dirty* implementation of incorrectly masking faces based on [Aqeel Anwar](https://github.com/aqeelanwar)'s [**MaskTheFace**](https://github.com/aqeelanwar/MaskTheFace). Installation and basic usage follows the original methods from [**MaskTheFace**](https://github.com/aqeelanwar/MaskTheFace).
 
 * The original [**MaskTheFace**](https://github.com/aqeelanwar/MaskTheFace) project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
 
@@ -52,7 +52,7 @@ python mask_the_face.py --path 'data/office.jpg' --mask_type 'surgical' --wear_t
 
 ### Examples
 
-<img src="images/example_of_my_face.jpg" alt="my_face" width="180" /><img src="images/example_of_my_face_surgical_normal.jpg" alt="normal" width="180" /><img src="images/example_of_my_face_surgical_chin.jpg" alt="chin_mask" width="180" /><img src="images/example_of_my_face_surgical_nose.jpg" alt="nose_mask" width="180" /><img src="images/example_of_my_face_surgical_eye.jpg" alt="eye_mask" width="180" />
+<img src="images/example_of_my_face.jpg" alt="my_face" width="250" /><img src="images/example_of_my_face_surgical_normal.jpg" alt="normal" width="250" /><br/><img src="images/example_of_my_face_surgical_chin.jpg" alt="chin_mask" width="250" /><img src="images/example_of_my_face_surgical_nose.jpg" alt="nose_mask" width="250" /><img src="images/example_of_my_face_surgical_eye.jpg" alt="eye_mask" width="250" />
 
 * picture of my face, normally masked, chin_masked, nose_masked, eye_masked face
 
